@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마음발자국</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Apple SD Gothic Neo', sans-serif; background: #f0f7ff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 20px; }
+
+  .app { width: 100%; max-width: 420px; margin: 0 auto; }
+
+  /* 화면 전환 */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== 1. 랜딩 ===== */
+  .landing { position: relative; min-height: 100vh; background: #dff0fb; overflow: hidden; display: flex; flex-direction: column; }
+  .landing svg.bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .landing-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 300px 32px 40px; }
+  .service-name { font-size: 30px; font-weight: 700; color: #1e293b; margin-bottom: 12px; text-align: center; }
+  .hero-sub { font-size: 15px; color: #475569; line-height: 1.9; text-align: center; margin-bottom: 32px; }
+
+  /* ===== 공통 버튼 ===== */
+  .btn-dark { width: 100%; padding: 16px; background: #1e293b; color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; text-align: center; }
+  .btn-green { width: 100%; padding: 15px; background: #1D9E75; color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; margin-top: 6px; }
+  .btn-outline { width: 100%; padding: 13px; background: transparent; color: #64748b; border: 1.5px solid #cbd5e1; border-radius: 14px; font-size: 14px; cursor: pointer; text-align: center; margin-top: 10px; }
+  .btn-text { width: 100%; padding: 12px; background: transparent; color: #64748b; border: none; font-size: 14px; cursor: pointer; text-align: center; margin-top: 8px; text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ===== 2~3. 입력 폼 ===== */
+  .form-screen { background: white; min-height: 100vh; padding: 60px 28px 40px; }
+  .form-title { font-size: 22px; font-weight: 700; color: #1e293b; margin-bottom: 8px; line-height: 1.4; }
+  .form-sub { font-size: 14px; color: #64748b; margin-bottom: 32px; line-height: 1.6; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+  .field-group { margin-bottom: 22px; }
+  input[type="text"], input[type="date"], textarea {
+    width: 100%; padding: 14px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px;
+    font-size: 15px; color: #1e293b; background: #f8fafc; outline: none;
+    font-family: inherit; transition: border 0.2s;
+  }
+  input:focus, textarea:focus { border-color: #1D9E75; background: white; }
+  textarea { height: 90px; resize: none; line-height: 1.6; }
+
+  .pet-type-row { display: flex; gap: 10px; }
+  .pet-type-btn { flex: 1; padding: 14px 8px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 14px; color: #64748b; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .pet-type-btn.selected { border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; font-weight: 600; }
+
+  /* ===== 4. 로딩 ===== */
+  .loading-screen { background: #dff0fb; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+  .paw-icon { font-size: 52px; margin-bottom: 28px; animation: pawPulse 1.5s ease-in-out infinite; }
+  @keyframes pawPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(0.85);opacity:0.5} }
+  .loading-title { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+  .loading-text { font-size: 15px; color: #475569; line-height: 1.9; }
+
+  /* ===== 5. 편지 ===== */
+  .letter-screen { background: #f8fafc; min-height: 100vh; }
+  .letter-header { background: white; padding: 20px 20px 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  .pet-avatar { width: 44px; height: 44px; border-radius: 50%; background: #E1F5EE; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .pet-name { font-size: 16px; font-weight: 700; color: #1e293b; }
+  .pet-location { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .chat-body { padding: 24px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .chat-date { text-align: center; font-size: 12px; color: #94a3b8; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; width: fit-content; margin: 0 auto 4px; }
+  .msg-row { display: flex; align-items: flex-end; gap: 8px; }
+  .msg-avatar { width: 32px; height: 32px; border-radius: 50%; background: #E1F5EE; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .bubble { max-width: 78%; background: white; border-radius: 18px 18px 18px 4px; padding: 13px 16px; font-size: 15px; color: #1e293b; line-height: 1.7; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .bubble-time { font-size: 11px; color: #94a3b8; margin-top: 4px; padding-left: 2px; }
+  .letter-actions { padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* ===== 6. 결제 ===== */
+  .pay-screen { background: white; min-height: 100vh; padding: 60px 28px 40px; }
+  .badge { display: inline-block; padding: 5px 12px; background: #E1F5EE; color: #0F6E56; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+  .pay-title { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 10px; line-height: 1.4; }
+  .pay-sub { font-size: 14px; color: #64748b; margin-bottom: 28px; line-height: 1.6; }
+  .pay-card { border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 24px; background: #f8fafc; }
+  .pay-plan { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .pay-price { font-size: 28px; font-weight: 700; color: #1D9E75; margin-bottom: 4px; }
+  .pay-price span { font-size: 15px; color: #94a3b8; font-weight: 400; }
+  .pay-original { font-size: 13px; color: #94a3b8; }
+  .donate-box { background: #fef9f0; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; line-height: 1.6; }
+  .donate-box strong { color: #c2410c; }
+
+  /* ===== 오류 ===== */
+  .error-msg { color: #ef4444; font-size: 13px; margin-top: 8px; display: none; }
+
+  /* 뒤로가기 */
+  .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; padding: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== 1. 랜딩 ===== -->
+  <div class="screen active" id="s1">
+    <div class="landing">
+      <svg class="bg" viewBox="0 0 420 700" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <rect width="420" height="700" fill="#dff0fb"/>
+        <!-- 햇님 -->
+        <circle cx="52" cy="62" r="30" fill="#fff9c4" opacity="0.95"/>
+        <circle cx="52" cy="62" r="44" fill="#fff9c4" opacity="0.18"/>
+        <circle cx="52" cy="62" r="58" fill="#fff9c4" opacity="0.07"/>
+        <!-- 무지개 -->
+        <path d="M480 -14 Q335 55 265 140 Q224 195 208 248" stroke="#f87171" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <path d="M490 -4 Q345 65 275 150 Q234 205 218 258" stroke="#fb923c" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <path d="M500 6 Q355 75 285 160 Q244 215 228 268" stroke="#fbbf24" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <path d="M510 16 Q365 85 295 170 Q254 225 238 278" stroke="#4ade80" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <path d="M520 26 Q375 95 305 180 Q264 235 248 288" stroke="#60a5fa" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <path d="M530 36 Q385 105 315 190 Q274 245 258 298" stroke="#c084fc" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <!-- 구름 (햇님과 무지개 사이) -->
+        <ellipse cx="178" cy="88" rx="46" ry="22" fill="white"/>
+        <circle cx="160" cy="76" rx="20" ry="20" fill="white"/>
+        <circle cx="160" cy="76" r="20" fill="white"/>
+        <circle cx="182" cy="68" r="25" fill="white"/>
+        <circle cx="206" cy="74" r="18" fill="white"/>
+        <circle cx="220" cy="82" r="13" fill="white"/>
+        <!-- 언덕 -->
+        <path d="M0 520 Q105 480 210 492 Q315 504 420 472 L420 700 L0 700 Z" fill="#c8e8b4"/>
+        <path d="M0 558 Q91 518 196 528 Q301 538 420 508 L420 700 L0 700 Z" fill="#aad99a"/>
+        <path d="M0 600 Q126 568 252 576 Q336 582 420 558 L420 700 L0 700 Z" fill="#8ecb7e"/>
+        <!-- 나무 왼쪽 -->
+        <rect x="62" y="510" width="8" height="56" fill="#a16207"/>
+        <circle cx="66" cy="496" r="27" fill="#bbf7d0"/>
+        <circle cx="50" cy="510" r="18" fill="#86efac"/>
+        <circle cx="82" cy="507" r="21" fill="#86efac"/>
+        <circle cx="66" cy="474" r="15" fill="#bbf7d0"/>
+        <!-- 나무 오른쪽 -->
+        <rect x="346" y="492" width="7" height="50" fill="#a16207"/>
+        <circle cx="349" cy="479" r="23" fill="#a7f3d0"/>
+        <circle cx="335" cy="492" r="15" fill="#6ee7b7"/>
+        <circle cx="364" cy="489" r="17" fill="#6ee7b7"/>
+        <circle cx="349" cy="460" r="13" fill="#a7f3d0"/>
+        <!-- 집 분홍 -->
+        <rect x="238" y="542" width="52" height="38" rx="4" fill="#fda4af"/>
+        <polygon points="234,542 264,512 294,542" fill="#fb7185"/>
+        <rect x="251" y="558" width="20" height="22" rx="3" fill="#be123c"/>
+        <rect x="238" y="548" width="13" height="13" rx="2" fill="#fce7f3"/>
+        <rect x="263" y="548" width="13" height="13" rx="2" fill="#fce7f3"/>
+        <rect x="261" y="508" width="5" height="16" fill="#fbbf24"/>
+        <circle cx="264" cy="504" r="6" fill="#fbbf24"/>
+        <!-- 집 노랑 -->
+        <rect x="306" y="528" width="44" height="34" rx="3" fill="#fde68a"/>
+        <polygon points="302,528 328,502 354,528" fill="#f59e0b"/>
+        <rect x="317" y="542" width="16" height="20" rx="2" fill="#92400e"/>
+        <rect x="306" y="534" width="11" height="11" rx="2" fill="#fffbeb"/>
+        <rect x="331" y="534" width="11" height="11" rx="2" fill="#fffbeb"/>
+        <!-- 꽃 -->
+        <line x1="30" y1="595" x2="30" y2="576" stroke="#16a34a" stroke-width="2"/>
+        <circle cx="30" cy="572" r="6" fill="#fda4af"/>
+        <circle cx="24" cy="566" r="5" fill="#fb7185"/>
+        <circle cx="36" cy="566" r="5" fill="#fb7185"/>
+        <circle cx="30" cy="563" r="4" fill="#ffe566"/>
+        <line x1="118" y1="582" x2="118" y2="566" stroke="#16a34a" stroke-width="2"/>
+        <circle cx="118" cy="562" r="5" fill="#c4b5fd"/>
+        <circle cx="112" cy="556" r="4.5" fill="#a78bfa"/>
+        <circle cx="124" cy="556" r="4.5" fill="#a78bfa"/>
+        <circle cx="118" cy="553" r="3.5" fill="#ffe566"/>
+        <!-- 발자국 한 쌍 -->
+        <g transform="translate(186,592) rotate(-8)">
+          <ellipse cx="0" cy="0" rx="9" ry="7.5" fill="#1a1008"/>
+          <circle cx="-7.5" cy="-9" r="3" fill="#1a1008"/>
+          <circle cx="-2.5" cy="-11.5" r="3.2" fill="#1a1008"/>
+          <circle cx="2.5" cy="-11.5" r="3.2" fill="#1a1008"/>
+          <circle cx="7.5" cy="-9" r="3" fill="#1a1008"/>
+        </g>
+        <g transform="translate(210,608) rotate(8)">
+          <ellipse cx="0" cy="0" rx="9" ry="7.5" fill="#1a1008"/>
+          <circle cx="-7.5" cy="-9" r="3" fill="#1a1008"/>
+          <circle cx="-2.5" cy="-11.5" r="3.2" fill="#1a1008"/>
+          <circle cx="2.5" cy="-11.5" r="3.2" fill="#1a1008"/>
+          <circle cx="7.5" cy="-9" r="3" fill="#1a1008"/>
+        </g>
+      </svg>
+      <div class="landing-content">
+        <div class="service-name">마음발자국</div>
+        <div class="hero-sub">항상 마음 속에 있어요<br>무지개 다리 너머에서<br>오늘도 편지를 써요 🐾</div>
+        <button class="btn-dark" onclick="goTo('s2')">편지 받으러 가기</button>
+        <button class="btn-text" onclick="goTo('s2')">이미 계정이 있어요</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 반려동물 등록 ===== -->
+  <div class="screen" id="s2">
+    <div class="form-screen" style="position:relative;">
+      <button class="back-btn" onclick="goTo('s1')">←</button>
+      <div class="form-title">아이를 알려주세요</div>
+      <div class="form-sub">편지를 쓰기 위해 꼭 필요해요 🐾</div>
+
+      <div class="field-group">
+        <div class="field-label">아이 이름</div>
+        <input type="text" id="petName" placeholder="예: 콩이, 나비, 두부..." maxlength="10"/>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">어떤 아이였나요?</div>
+        <div class="pet-type-row">
+          <button class="pet-type-btn" onclick="selectPet(this,'강아지')">🐶 강아지</button>
+          <button class="pet-type-btn" onclick="selectPet(this,'고양이')">🐱 고양이</button>
+          <button class="pet-type-btn" onclick="selectPet(this,'기타')">🐾 기타</button>
+        </div>
+        <div class="error-msg" id="petTypeError">종류를 선택해주세요</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">함께한 시간</div>
+        <input type="text" id="petYears" placeholder="예: 14년, 7년 3개월..." maxlength="20"/>
+      </div>
+
+      <button class="btn-green" onclick="nextStep2()">다음</button>
+    </div>
+  </div>
+
+  <!-- ===== 3. 추억 + 사주 ===== -->
+  <div class="screen" id="s3">
+    <div class="form-screen" style="position:relative;">
+      <button class="back-btn" onclick="goTo('s2')">←</button>
+      <div class="form-title" id="s3Title">에 대해<br>조금 더 알려주세요</div>
+      <div class="form-sub">이 기억들로 편지를 써드려요 💌</div>
+
+      <div class="field-group">
+        <div class="field-label">가장 좋아했던 것</div>
+        <input type="text" id="petLikes" placeholder="예: 산책, 간식, 햇볕 드는 창가..."/>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">마지막으로 함께한 순간</div>
+        <textarea id="lastMemory" placeholder="짧게 써주셔도 괜찮아요. 그 순간을 기억하고 있어요..."></textarea>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">보호자 생년월일 (운세용)</div>
+        <input type="date" id="birthDate"/>
+      </div>
+
+      <button class="btn-green" onclick="generateLetter()">편지 받기 🐾</button>
+    </div>
+  </div>
+
+  <!-- ===== 4. 로딩 ===== -->
+  <div class="screen" id="s4">
+    <div class="loading-screen">
+      <div class="paw-icon">🐾</div>
+      <div class="loading-title" id="loadingTitle">편지를 쓰고 있어요</div>
+      <div class="loading-text" id="loadingText">무지개 다리 너머에서도<br>오늘도 생각하고 있대요<br><br>잠시만 기다려주세요 🌥️</div>
+    </div>
+  </div>
+
+  <!-- ===== 5. 편지 ===== -->
+  <div class="screen" id="s5">
+    <div class="letter-screen">
+      <div class="letter-header">
+        <div class="pet-avatar" id="petEmoji">🐶</div>
+        <div>
+          <div class="pet-name" id="letterPetName">콩이 🌥️</div>
+          <div class="pet-location">무지개 다리 너머에서</div>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="chat-date" id="letterDate">오늘</div>
+        <div class="msg-row">
+          <div class="msg-avatar" id="msgEmoji">🐶</div>
+          <div>
+            <div class="bubble" id="letterBubble1"></div>
+            <div class="bubble-time">오전 8:07</div>
+          </div>
+        </div>
+        <div class="msg-row">
+          <div class="msg-avatar" id="msgEmoji2">🐶</div>
+          <div>
+            <div class="bubble" id="letterBubble2"></div>
+            <div class="bubble-time">오전 8:08</div>
+          </div>
+        </div>
+        <div class="msg-row">
+          <div class="msg-avatar" id="msgEmoji3">🐶</div>
+          <div>
+            <div class="bubble" id="letterBubble3"></div>
+            <div class="bubble-time">오전 8:09</div>
+          </div>
+        </div>
+      </div>
+      <div class="letter-actions">
+        <button class="btn-green" onclick="goTo('s6')">매일 카톡으로 받고 싶어요</button>
+        <button class="btn-outline" onclick="goTo('s1')">처음으로 돌아가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. 결제 유도 ===== -->
+  <div class="screen" id="s6">
+    <div class="pay-screen" style="position:relative;">
+      <button class="back-btn" onclick="goTo('s5')">←</button>
+      <div class="badge">🎉 런칭 이벤트</div>
+      <div class="pay-title" id="payTitle">편지를<br>매일 카톡으로 받아요</div>
+      <div class="pay-sub">매일 아침 8시, 카톡으로 직접 도착해요.<br>오늘의 운세를 담아 전해드려요.</div>
+      <div class="pay-card">
+        <div class="pay-plan">월간 구독</div>
+        <div class="pay-price">990원<span>/월</span></div>
+        <div class="pay-original">정가 4,900원 · 80% 할인 (이달 한정)</div>
+      </div>
+      <div class="donate-box">
+        🐾 부적 구매 수익의 <strong>50%는 유기견·묘 보호소</strong>에 기부돼요.<br>
+        구독으로 함께하면 더 많은 아이들이 사랑받을 수 있어요.
+      </div>
+      <button class="btn-green" onclick="alert('준비 중이에요! 곧 오픈할게요 🐾')">구독 시작하기</button>
+      <button class="btn-text" onclick="goTo('s5')">다음에 할게요</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== 설정 =====
+const API_KEY = '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'; // ← 여기에 API 키 붙여넣기
+
+// ===== 상태 =====
+let petData = { name: '', type: '', years: '', likes: '', lastMemory: '', birthDate: '' };
+let selectedPetType = '';
+
+// ===== 화면 전환 =====
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ===== 반려동물 종류 선택 =====
+function selectPet(btn, type) {
+  document.querySelectorAll('.pet-type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedPetType = type;
+  document.getElementById('petTypeError').style.display = 'none';
+}
+
+// ===== 2단계 → 3단계 =====
+function nextStep2() {
+  const name = document.getElementById('petName').value.trim();
+  if (!name) { alert('아이 이름을 입력해주세요 🐾'); return; }
+  if (!selectedPetType) { document.getElementById('petTypeError').style.display = 'block'; return; }
+
+  petData.name = name;
+  petData.type = selectedPetType;
+  petData.years = document.getElementById('petYears').value.trim();
+
+  // 3단계 제목에 이름 반영
+  document.getElementById('s3Title').innerHTML = `${name}에 대해<br>조금 더 알려주세요`;
+  goTo('s3');
+}
+
+// ===== 편지 생성 =====
+async function generateLetter() {
+  petData.likes = document.getElementById('petLikes').value.trim();
+  petData.lastMemory = document.getElementById('lastMemory').value.trim();
+  petData.birthDate = document.getElementById('birthDate').value;
+
+  if (!petData.likes) { alert('좋아했던 것을 입력해주세요 🐾'); return; }
+
+  // 로딩 화면
+  document.getElementById('loadingTitle').textContent = `${petData.name}가 편지를 쓰고 있어요`;
+  goTo('s4');
+
+  // 오늘 날짜
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
+
+  // 프롬프트
+  const prompt = `당신은 무지개 다리 너머 하늘나라에 있는 반려동물 ${petData.name}(${petData.type})입니다.
+보호자에게 오늘의 따뜻한 편지 메시지 3개를 써주세요.
+
+반려동물 정보:
+- 이름: ${petData.name}
+- 종류: ${petData.type}
+- 함께한 시간: ${petData.years || '소중한 시간'}
+- 가장 좋아했던 것: ${petData.likes}
+- 마지막 함께한 순간: ${petData.lastMemory || '언제나 곁에 있었어요'}
+- 오늘 날짜: ${dateStr}
+${petData.birthDate ? `- 보호자 생년월일: ${petData.birthDate} (이를 바탕으로 오늘의 운세 메시지를 자연스럽게 녹여주세요)` : ''}
+
+규칙:
+1. 호칭 없이 자연스럽게 (엄마/아빠 등 쓰지 말 것)
+2. 3~4문장씩, 카톡 말풍선처럼 짧고 따뜻하게
+3. 슬프지 않고 밝고 따뜻한 톤으로
+4. 이모티콘 1~2개 포함
+5. "운세"라는 단어 직접 사용 금지
+6. 하늘나라에 있다는 걸 자연스럽게 녹여주기
+
+반드시 아래 JSON 형식으로만 응답 (다른 텍스트 없이):
+{"msg1":"첫 번째 메시지","msg2":"두 번째 메시지","msg3":"세 번째 메시지"}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content[0].text.trim();
+    const letters = JSON.parse(text);
+
+    // 편지 화면 세팅
+    const emoji = petData.type === '강아지' ? '🐶' : petData.type === '고양이' ? '🐱' : '🐾';
+    document.getElementById('petEmoji').textContent = emoji;
+    document.getElementById('msgEmoji').textContent = emoji;
+    document.getElementById('msgEmoji2').textContent = emoji;
+    document.getElementById('msgEmoji3').textContent = emoji;
+    document.getElementById('letterPetName').textContent = `${petData.name} 🌥️`;
+    document.getElementById('payTitle').textContent = `${petData.name} 편지를\n매일 카톡으로 받아요`;
+    document.getElementById('letterDate').textContent = dateStr;
+    document.getElementById('letterBubble1').textContent = letters.msg1;
+    document.getElementById('letterBubble2').textContent = letters.msg2;
+    document.getElementById('letterBubble3').textContent = letters.msg3;
+
+    goTo('s5');
+
+  } catch (err) {
+    console.error(err);
+    alert('편지를 받아오는 중 오류가 발생했어요. API 키를 확인해주세요.');
+    goTo('s3');
+  }
+}
+</script>
+</body>
+</html>
